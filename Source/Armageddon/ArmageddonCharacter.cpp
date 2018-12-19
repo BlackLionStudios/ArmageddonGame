@@ -107,41 +107,49 @@ void AArmageddonCharacter::MoveRight(float Value)
 
 void AArmageddonCharacter::BeginPlay()
 {
+	//start function on begining
 	Super::BeginPlay();
 
-	//get directional light
+	//get directional light objects in scene
 	for (TObjectIterator<UDirectionalLightComponent> Itr; Itr; ++Itr)
 	{
-		// Access the subclass instance with the * or -> operators.
+		// set Sun variable to directional light object
 		Sun = *Itr;
 	}
 }
 
-// Shadow system
+// Shadow system to track is character in shadow or not
 void AArmageddonCharacter::ShadowSystem()
 {	
+	// var for hit result
 	FHitResult OutHit;
 
+	//gets this actors location and set var for it
 	FVector PlayerLocation = GetActorLocation();
-	FVector ForwardVector = Cast<AActor>(Sun)->GetActorForwardVector();
+	//gets lights direction vector
+	FVector ForwardVector = Cast<UDirectionalLightComponent>(Sun)->GetForwardVector();
 	FVector End = (ForwardVector * -100000.f) + PlayerLocation;
+	// other paramaters for collision
 	FCollisionQueryParams CollisionParams;
 	
+	//if hits something return True otherwise return False
 	if (GetWorld()->LineTraceSingleByChannel(OutHit, PlayerLocation, End, ECC_Visibility, CollisionParams))
 	{
-		Visibility = 1.f;
+		Visibility = 0.f;
 	}
 	else
 	{
-		Visibility = 0.f;
+		Visibility = 1.f;
 	}
 }
 
 void AArmageddonCharacter::Tick(float DeltaTime)
 {
+	//function works every Tick(few frames)
 	Super::Tick(DeltaTime);
 
 	ShadowSystem();
+	//prints debug text in corner
 	if(GEngine)
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("{Visibility}"));
+		GEngine->AddOnScreenDebugMessage(-10, 1.f, FColor::Yellow, FString::Printf(TEXT("Visibility: %f %"), Visibility * 100));
 }
