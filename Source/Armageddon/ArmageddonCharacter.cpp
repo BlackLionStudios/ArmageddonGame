@@ -8,6 +8,9 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "EngineUtils.h"
+#include "DrawDebugHelpers.h"
+#include "Runtime/Engine/Classes/Engine/Engine.h"
 
 //////////////////////////////////////////////////////////////////////////
 // AArmageddonCharacter
@@ -58,30 +61,8 @@ void AArmageddonCharacter::SetupPlayerInputComponent(class UInputComponent* Play
 	PlayerInputComponent->BindAxis("TurnRate", this, &AArmageddonCharacter::TurnAtRate);
 	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
 	PlayerInputComponent->BindAxis("LookUpRate", this, &AArmageddonCharacter::LookUpAtRate);
-
-	// handle touch devices
-	PlayerInputComponent->BindTouch(IE_Pressed, this, &AArmageddonCharacter::TouchStarted);
-	PlayerInputComponent->BindTouch(IE_Released, this, &AArmageddonCharacter::TouchStopped);
-
-	// VR headset functionality
-	PlayerInputComponent->BindAction("ResetVR", IE_Pressed, this, &AArmageddonCharacter::OnResetVR);
 }
 
-
-void AArmageddonCharacter::OnResetVR()
-{
-	UHeadMountedDisplayFunctionLibrary::ResetOrientationAndPosition();
-}
-
-void AArmageddonCharacter::TouchStarted(ETouchIndex::Type FingerIndex, FVector Location)
-{
-		Jump();
-}
-
-void AArmageddonCharacter::TouchStopped(ETouchIndex::Type FingerIndex, FVector Location)
-{
-		StopJumping();
-}
 
 void AArmageddonCharacter::TurnAtRate(float Rate)
 {
@@ -122,4 +103,45 @@ void AArmageddonCharacter::MoveRight(float Value)
 		// add movement in that direction
 		AddMovementInput(Direction, Value);
 	}
+}
+
+void AArmageddonCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+	//get directional light
+	for (TObjectIterator<UDirectionalLightComponent> Itr; Itr; ++Itr)
+	{
+		// Access the subclass instance with the * or -> operators.
+		Sun = *Itr;
+	}
+}
+
+// Shadow system
+void AArmageddonCharacter::ShadowSystem()
+{	
+	FHitResult OutHit;
+
+	FVector PlayerLocation = GetActorLocation();
+	FVector ForwardVector = Cast<AActor>(Sun)->GetActorForwardVector();
+	FVector End = (ForwardVector * -100000.f) + PlayerLocation;
+	FCollisionQueryParams CollisionParams;
+	
+	if (GetWorld()->LineTraceSingleByChannel(OutHit, PlayerLocation, End, ECC_Visibility, CollisionParams))
+	{
+		Visibility = 1.f;
+	}
+	else
+	{
+		Visibility = 0.f;
+	}
+}
+
+void AArmageddonCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	ShadowSystem();
+	if(GEngine)
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("{Visibility}"));
 }
