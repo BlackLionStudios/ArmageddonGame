@@ -3,8 +3,10 @@
 #pragma once
 
 #include "Engine.h"
+#include "PointLightShadowSys.h"
 #include "GameFramework/Character.h"
 #include "ArmageddonCharacter.generated.h"
+
 
 UCLASS(config=Game)
 class AArmageddonCharacter : public ACharacter
@@ -27,6 +29,8 @@ public:
 	float BaseLookUpRate;
 
 	void Tick(float Delta);
+
+	TArray<APointLightShadowSys*> Lights;
 
 protected:
 

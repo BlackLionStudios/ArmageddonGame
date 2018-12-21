@@ -11,6 +11,7 @@
 #include "EngineUtils.h"
 #include "DrawDebugHelpers.h"
 #include "Runtime/Engine/Classes/Engine/Engine.h"
+#include "PointLightShadowSys.h"
 
 //////////////////////////////////////////////////////////////////////////
 // AArmageddonCharacter
@@ -35,7 +36,6 @@ AArmageddonCharacter::AArmageddonCharacter()
 	GetCharacterMovement()->JumpZVelocity = 600.f;
 	GetCharacterMovement()->AirControl = 0.2f;
 
-	
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named MyCharacter (to avoid direct content references in C++)
@@ -135,12 +135,19 @@ void AArmageddonCharacter::ShadowSystem()
 	//if hits something return True otherwise return False
 	if (GetWorld()->LineTraceSingleByChannel(OutHit, PlayerLocation, End, ECC_Visibility, CollisionParams))
 	{
-		Visibility = 0.f;
+		Visibility = 0.0f;
 	}
 	else
 	{
-		Visibility = 1.f;
+		Visibility = 1.0f;
 	}
+
+	for (int32 i = 0; i != Lights.Num(); ++i)
+	{
+		Visibility = (Lights[i]->Brightness) + Visibility;
+	}
+
+	Visibility = FMath::Clamp(Visibility, 0.0f, 1.0f);
 }
 
 void AArmageddonCharacter::Tick(float DeltaTime)
@@ -151,5 +158,5 @@ void AArmageddonCharacter::Tick(float DeltaTime)
 	ShadowSystem();
 	//prints debug text in corner
 	if(GEngine)
-		GEngine->AddOnScreenDebugMessage(-10, 1.f, FColor::Yellow, FString::Printf(TEXT("Visibility: %f %"), Visibility * 100));
+		GEngine->AddOnScreenDebugMessage(-10, 1.f, FColor::Yellow, FString::Printf(TEXT("Visibility: %d %"), int(Visibility * 100)));
 }
