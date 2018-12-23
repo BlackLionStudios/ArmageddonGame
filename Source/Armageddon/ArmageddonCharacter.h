@@ -32,6 +32,10 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
 	float BaseLookUpRate;
 
+	//Visibility index
+	UPROPERTY(BlueprintReadOnly)
+	float Visibility;
+
 	void Tick(float Delta);
 
 	TArray<APointLightShadowSys*> Lights;
@@ -71,9 +75,6 @@ public:
 
 	// directional light actor
 	class UDirectionalLightComponent* Sun;
-	
-	//Visibility index
-	float Visibility;
 
 protected:
 
