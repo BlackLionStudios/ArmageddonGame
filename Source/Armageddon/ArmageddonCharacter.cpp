@@ -47,6 +47,7 @@ AArmageddonCharacter::AArmageddonCharacter()
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
+	GetCharacterMovement()->GetNavAgentPropertiesRef().bCanCrouch = true;
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named MyCharacter (to avoid direct content references in C++)
@@ -61,7 +62,8 @@ void AArmageddonCharacter::SetupPlayerInputComponent(class UInputComponent* Play
 	check(PlayerInputComponent);
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
-
+	PlayerInputComponent->BindAction("CrouchButton", IE_Pressed, this, &AArmageddonCharacter::DoCrouch);
+	
 	PlayerInputComponent->BindAxis("MoveForward", this, &AArmageddonCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AArmageddonCharacter::MoveRight);
 
@@ -137,14 +139,15 @@ void AArmageddonCharacter::ShadowSystem()
 
 	//gets this actors location and set var for it
 	FVector PlayerLocation = GetActorLocation();
+	FVector PlayerHeadLocation = GetActorLocation() + FVector(0.f,0.0f,76.0f);
 	//gets lights direction vector
 	FVector ForwardVector = Cast<UDirectionalLightComponent>(Sun)->GetForwardVector();
 	FVector End = (ForwardVector * -100000.f) + PlayerLocation;
 	// other paramaters for collision
 	FCollisionQueryParams CollisionParams;
-	
+
 	//if hits something return True otherwise return False
-	if (GetWorld()->LineTraceSingleByChannel(OutHit, PlayerLocation, End, ECC_Visibility, CollisionParams))
+	if (GetWorld()->LineTraceSingleByChannel(OutHit, PlayerLocation, End, ECC_Visibility, CollisionParams)&& GetWorld()->LineTraceSingleByChannel(OutHit, PlayerHeadLocation, End, ECC_Visibility, CollisionParams))
 	{
 		Visibility = 0.0f;
 	}
@@ -169,5 +172,17 @@ void AArmageddonCharacter::Tick(float DeltaTime)
 	ShadowSystem();
 	//prints debug text in corner
 	if(GEngine)
-		GEngine->AddOnScreenDebugMessage(-10, 1.f, FColor::Yellow, FString::Printf(TEXT("Visibility: %d %"), int(Visibility * 100)));
+		GEngine->AddOnScreenDebugMessage(-10, 1.f, FColor::Yellow, FString::Printf(TEXT("Visibility: %d"), int(Visibility * 100)));
+}
+
+void AArmageddonCharacter::DoCrouch()
+{
+	if (GetCharacterMovement()->IsCrouching())
+	{
+		UnCrouch();
+	}
+	else if(CanCrouch())
+	{
+		Crouch();
+	}
 }

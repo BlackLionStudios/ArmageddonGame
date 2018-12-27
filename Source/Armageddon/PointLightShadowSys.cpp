@@ -86,4 +86,3 @@ void APointLightShadowSys::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AAc
 		Player->Lights.Remove(this);
 	}
 }
-
