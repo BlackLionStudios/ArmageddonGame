@@ -12,6 +12,7 @@
 #include "DrawDebugHelpers.h"
 #include "Runtime/Engine/Classes/Engine/Engine.h"
 #include "PointLightShadowSys.h"
+#include "Runtime/Core/Public/GenericPlatform/GenericPlatformMisc.h"
 
 //////////////////////////////////////////////////////////////////////////
 // AArmageddonCharacter
@@ -24,6 +25,7 @@ AArmageddonCharacter::AArmageddonCharacter()
 	// set our turn rates for input
 	BaseTurnRate = 45.f;
 	BaseLookUpRate = 45.f;
+	Health = 100.f;
 
 	// Don't rotate when the controller rotates. Let that just affect the camera.
 	bUseControllerRotationPitch = false;
@@ -62,7 +64,8 @@ void AArmageddonCharacter::SetupPlayerInputComponent(class UInputComponent* Play
 	check(PlayerInputComponent);
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
-	PlayerInputComponent->BindAction("CrouchButton", IE_Pressed, this, &AArmageddonCharacter::DoCrouch);
+	PlayerInputComponent->BindAction("CrouchButton", IE_Pressed, this, &AArmageddonCharacter::StartCrouch);
+	PlayerInputComponent->BindAction("CrouchButton", IE_Released, this, &AArmageddonCharacter::StopCrouch);
 	
 	PlayerInputComponent->BindAxis("MoveForward", this, &AArmageddonCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AArmageddonCharacter::MoveRight);
@@ -131,15 +134,49 @@ void AArmageddonCharacter::BeginPlay()
 	}
 }
 
+void AArmageddonCharacter::Tick(float DeltaTime)
+{
+	//function works every Tick(few frames)
+	Super::Tick(DeltaTime);
+
+	ShadowSystem();
+}
+
+void AArmageddonCharacter::StartCrouch()
+{
+	if(CanCrouch())
+	{
+		Crouch();
+	}
+}
+
+void AArmageddonCharacter::StopCrouch()
+{
+	if (GetMovementComponent()->IsCrouching())
+	{
+		UnCrouch();
+	}
+}
+
+void AArmageddonCharacter::Damage(float DamageAmount)
+{
+	Health -= DamageAmount;
+
+	if (Health <= 0)
+	{
+		DisableInput(Cast<APlayerController>(GetController()));
+	}
+}
+
 // Shadow system to track is character in shadow or not
 void AArmageddonCharacter::ShadowSystem()
-{	
+{
 	// var for hit result
 	FHitResult OutHit;
 
 	//gets this actors location and set var for it
 	FVector PlayerLocation = GetActorLocation();
-	FVector PlayerHeadLocation = GetActorLocation() + FVector(0.f,0.0f,76.0f);
+	FVector PlayerHeadLocation = GetActorLocation() + FVector(0.f, 0.0f, 68.0f);
 	//gets lights direction vector
 	FVector ForwardVector = Cast<UDirectionalLightComponent>(Sun)->GetForwardVector();
 	FVector End = (ForwardVector * -100000.f) + PlayerLocation;
@@ -147,7 +184,7 @@ void AArmageddonCharacter::ShadowSystem()
 	FCollisionQueryParams CollisionParams;
 
 	//if hits something return True otherwise return False
-	if (GetWorld()->LineTraceSingleByChannel(OutHit, PlayerLocation, End, ECC_Visibility, CollisionParams)&& GetWorld()->LineTraceSingleByChannel(OutHit, PlayerHeadLocation, End, ECC_Visibility, CollisionParams))
+	if (GetWorld()->LineTraceSingleByChannel(OutHit, PlayerLocation, End, ECC_Visibility, CollisionParams) && GetWorld()->LineTraceSingleByChannel(OutHit, PlayerHeadLocation, End, ECC_Visibility, CollisionParams))
 	{
 		Visibility = 0.0f;
 	}
@@ -162,27 +199,9 @@ void AArmageddonCharacter::ShadowSystem()
 	}
 
 	Visibility = FMath::Clamp(Visibility, 0.0f, 1.0f);
-}
 
-void AArmageddonCharacter::Tick(float DeltaTime)
-{
-	//function works every Tick(few frames)
-	Super::Tick(DeltaTime);
-
-	ShadowSystem();
-	//prints debug text in corner
-	if(GEngine)
-		GEngine->AddOnScreenDebugMessage(-10, 1.f, FColor::Yellow, FString::Printf(TEXT("Visibility: %d"), int(Visibility * 100)));
-}
-
-void AArmageddonCharacter::DoCrouch()
-{
-	if (GetCharacterMovement()->IsCrouching())
+	if (GetMovementComponent()->IsCrouching())
 	{
-		UnCrouch();
-	}
-	else if(CanCrouch())
-	{
-		Crouch();
+		Visibility = Visibility / 1.5;
 	}
 }

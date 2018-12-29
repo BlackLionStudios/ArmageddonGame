@@ -33,13 +33,16 @@ public:
 	float BaseLookUpRate;
 
 	//Visibility index
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	float Visibility;
 
-	UPROPERTY(BlueprintReadOnly)
-	bool TestCrouched;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	float Health;
 
 	void Tick(float Delta);
+
+	UFUNCTION(BlueprintCallable)
+	void Damage(float DamageAmount);
 
 	TArray<APointLightShadowSys*> Lights;
 
@@ -63,7 +66,9 @@ protected:
 	 */
 	void LookUpAtRate(float Rate);
 
-	void DoCrouch();
+	void StartCrouch();
+
+	void StopCrouch();
 
 protected:
 	// APawn interface
