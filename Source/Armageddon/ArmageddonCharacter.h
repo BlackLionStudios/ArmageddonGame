@@ -39,6 +39,9 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	float Health;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	bool IsCrouched;
+
 	void Tick(float Delta);
 
 	UFUNCTION(BlueprintCallable)

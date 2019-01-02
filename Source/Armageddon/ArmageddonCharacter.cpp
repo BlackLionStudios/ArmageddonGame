@@ -26,6 +26,7 @@ AArmageddonCharacter::AArmageddonCharacter()
 	BaseTurnRate = 45.f;
 	BaseLookUpRate = 45.f;
 	Health = 100.f;
+	IsCrouched = false;
 
 	// Don't rotate when the controller rotates. Let that just affect the camera.
 	bUseControllerRotationPitch = false;
@@ -147,6 +148,7 @@ void AArmageddonCharacter::StartCrouch()
 	if(CanCrouch())
 	{
 		Crouch();
+		IsCrouched = true;
 	}
 }
 
@@ -155,6 +157,7 @@ void AArmageddonCharacter::StopCrouch()
 	if (GetMovementComponent()->IsCrouching())
 	{
 		UnCrouch();
+		IsCrouched = false;
 	}
 }
 
