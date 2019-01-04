@@ -185,7 +185,7 @@ void AArmageddonCharacter::ShadowSystem()
 	FVector End = (ForwardVector * -100000.f) + PlayerLocation;
 	// other paramaters for collision
 	FCollisionQueryParams CollisionParams;
-
+	//DrawDebugLine(GetWorld(), PlayerLocation, End, FColor::Red, false, 1.f);
 	//if hits something return True otherwise return False
 	if (GetWorld()->LineTraceSingleByChannel(OutHit, PlayerLocation, End, ECC_Visibility, CollisionParams) && GetWorld()->LineTraceSingleByChannel(OutHit, PlayerHeadLocation, End, ECC_Visibility, CollisionParams))
 	{
@@ -202,9 +202,4 @@ void AArmageddonCharacter::ShadowSystem()
 	}
 
 	Visibility = FMath::Clamp(Visibility, 0.0f, 1.0f);
-
-	if (GetMovementComponent()->IsCrouching())
-	{
-		Visibility = Visibility / 1.5;
-	}
 }
